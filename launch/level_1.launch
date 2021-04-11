@@ -7,16 +7,18 @@ http://wiki.ros.org/roslaunch/XML/remap
 
 
 ERROR: cannot launch node of type [ECE_5532_Final_Project/follow_twist_override]: Cannot locate node of type [follow_twist_override] in package [ECE_5532_Final_Project]. Make sure file exists in package path and permission is set to executable (chmod +x)
-
 -->
 <launch>
 
-  <remap from="/a1/cmd_vel" to="/remap/twist"/>
+  <remap from="/a1/cmd_vel" to="/remap/cmd_vel"/>
 
   <include file="$(find audibot_path_following)/launch/two_audibot_path_following.launch" />
+
+  <remap from="/remap/cmd_vel" to="/a1/cmd_vel"/>
 
   <node pkg="ece_5532_final" type="follow_twist_override" name="follow_twist_override" output="screen"/>
 
 </launch>
+
 
 
