@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ECE_5532_Final_Project)
+project(ece_5532_final)
 
 find_package(catkin REQUIRED COMPONENTS
 roscpp
@@ -17,5 +17,5 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(ECE_5532_Final_Project src/follow_twist_override.cpp)
-target_link_libraries(ECE_5532_Final_Project ${catkin_LIBRARIES})
+add_executable(follow_twist_override src/follow_twist_override.cpp)
+target_link_libraries(follow_twist_override ${catkin_LIBRARIES})
