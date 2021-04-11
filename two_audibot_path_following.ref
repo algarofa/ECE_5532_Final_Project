@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<launch>
+
+  <include file="$(find ugv_course_launch)/launch/two_audibot_road_world.launch" />
+
+  <include file="$(find audibot_lane_detection)/launch/lane_detection.launch" >
+    <arg name="nodelet" value="true" />
+    <arg name="robot_name" value="a1" />
+  </include>
+
+  <include file="$(find audibot_lane_detection)/launch/lane_detection.launch" >
+    <arg name="nodelet" value="true" />
+    <arg name="robot_name" value="a2" />
+  </include>
+
+  <group ns="a1" >
+    <node pkg="audibot_path_following" type="audibot_path_following" name="path_following" output="screen" >
+      <param name="speed" value="23.0" />
+    </node>
+    <node pkg="audibot_twist_controller" type="audibot_twist_node" name="twist_control" output="screen" />
+  </group>
+
+  <group ns="a2" >
+    <node pkg="audibot_path_following" type="audibot_path_following" name="path_following" output="screen" >
+      <param name="speed" value="20.0" />
+    </node>
+    <node pkg="audibot_twist_controller" type="audibot_twist_node" name="twist_control" output="screen" />
+  </group>
+
+</launch>

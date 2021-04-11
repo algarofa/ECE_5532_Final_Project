@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+
+  <include file="$(find audibot_path_following)/launch/two_audibot_path_following.launch" />
+
+</launch>
