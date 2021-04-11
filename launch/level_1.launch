@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<!--
+http://wiki.ros.org/roslaunch/XML/remap
+<remap from="/different_topic" to="/needed_topic"/>
+/a1/cmd_vel is the topic to remap
+-->
+<launch>
+
+  <remap from="/a1/cmd_vel" to="/override/cmd_vel"/>
+
+  <include file="$(find audibot_path_following)/launch/two_audibot_path_following.launch" />
+
+  <node ns="hijack" pkg="ECE_5532_Final_Project" type="audibot_twist_node" name="override_audibot_twist_node" />
+
+  <node pkg="ECE_5532_Final_Project" type="ECE_5532_Final_Project" name="ECE_5532_Final_Project" output="screen"/>
+
+</launch>
