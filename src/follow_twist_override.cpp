@@ -3,30 +3,18 @@
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float64.h>
 #include <sensor_msgs/JointState.h>
+#include <gazebo_msgs/LinkStates.h>
+#include <gazebo_msgs/LinkState.h>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Pose.h>
+#include <std_msgs/Float64.h>
+#include <gazebo_msgs/ModelStates.h>
+#include <gazebo_msgs/ModelState.h>
 
-//global variables
+
+//GLOBAL VARIABLES
 ros::Publisher pub_vel;
-
-//periodically sends a speed command
-/*
-void speedTimerCallback(const ros::TimerEvent& event)
-{
-  geometry_msgs::Twist vel;
-
-  vel.linear.x = 5.0;
-
-  pub_vel.publish(vel);
-
-  ROS_INFO("Published velocity");
-}
-*/
-
-/*
-void recvTwist(const geometry_msgs::Twist& msg){
-  ROS_INFO("rcvTwist:   Angular R: %f   P: %f   Y: %f   ", msg.angular.x, msg.angular.y, msg.angular.z);
-  ROS_INFO("rcvTwist:   Linear  X: %f   Y: %f   Z: %f   ", msg.linear.x, msg.linear.y, msg.linear.z);
-}
-*/
+double a1_a2_separation;
 
 //Every time steering command is recieved, also transmit a velocity command
 void recvThr(const geometry_msgs::Twist& msg){
@@ -35,52 +23,28 @@ void recvThr(const geometry_msgs::Twist& msg){
 
   geometry_msgs::Twist vel;
 
-  vel.linear.x = 25.0;
+  vel.linear.x = 10.0;
   vel.angular.z = msg.angular.z;
 
   pub_vel.publish(vel);
   //ROS_INFO("Published Velocity: %f", vel.linear.x);
 }
 
-void recvA1Joint(const sensor_msgs::JointState& msg){
-  //ROS_INFO("rcvThr:     Angular R: %f   P: %f   Y: %f   ", msg.angular.x, msg.angular.y, msg.angular.z);
-  //ROS_INFO("rcvThr:     Linear  X: %f   Y: %f   Z: %f   ", msg.linear.x, msg.linear.y, msg.linear.z);
-  /*
-  std_msgs/Header header
-  uint32 seq
-  time stamp
-  string frame_id
-string[] name
-float64[] position
-float64[] velocity
-float64[] effort
-*/
+//http://docs.ros.org/en/jade/api/gazebo_msgs/html/msg/ModelStates.html
+void recvModelStates(const gazebo_msgs::ModelStates& msg){
 
-  ROS_INFO("A1 Joint State time stamp:   %f", msg.header.stamp);
+  ROS_INFO("number of names: %d", msg.name.size());
 
-  ROS_INFO("A1 Joint State Position X:   %f", msg.position[0]);
-  ROS_INFO("A1 Joint State Position Y:   %f", msg.position[1]);
-  ROS_INFO("A1 Joint State Position Z:   %f", msg.position[2]);
+  ROS_INFO("Object %d X: %f", msg.pose[msg.name.size()-1].position.x);
+  ROS_INFO("Object %d Y: %f", msg.pose[msg.name.size()-1].position.y);
+  ROS_INFO("Object %d Z: %f", msg.pose[msg.name.size()-1].position.z);
 
-  ROS_INFO("A1 Joint State Velocity X:   %f", msg.velocity[0]);
-  ROS_INFO("A1 Joint State Velocity Y:   %f", msg.velocity[1]);
-  ROS_INFO("A1 Joint State Velocity Z:   %f", msg.velocity[2]);
+  ROS_INFO("Object %d X: %f", msg.pose[msg.name.size()-2].position.x);
+  ROS_INFO("Object %d Y: %f", msg.pose[msg.name.size()-2].position.y);
+  ROS_INFO("Object %d Z: %f", msg.pose[msg.name.size()-2].position.z);
 
 }
 
-void recvA2Joint(const sensor_msgs::JointState& msg){
-
-  ROS_INFO("A2 Joint State time stamp:   %f", msg.header.stamp);
-
-  ROS_INFO("A2 Joint State Position X:   %f", msg.position[0]);
-  ROS_INFO("A2 Joint State Position Y:   %f", msg.position[1]);
-  ROS_INFO("A2 Joint State Position Z:   %f", msg.position[2]);
-
-  ROS_INFO("A2 Joint State Velocity X:   %f", msg.velocity[0]);
-  ROS_INFO("A2 Joint State Velocity Y:   %f", msg.velocity[1]);
-  ROS_INFO("A2 Joint State Velocity Z:   %f", msg.velocity[2]);
-
-}
 
 //main function
 int main(int argc, char** argv){
@@ -96,8 +60,11 @@ int main(int argc, char** argv){
   //ros::Subscriber sub_twist = nh.subscribe("/a1/twist", 1, recvTwist);
   ros::Subscriber sub_cmd_vel = nh.subscribe("/a1/cmd_vel", 1, recvThr);
 
-  ros::Subscriber sub_a1_joint_states = nh.subscribe("/a1/joint_states", 1, recvA1Joint);
-  ros::Subscriber sub_a2_joint_states = nh.subscribe("/a2/joint_states", 1, recvA2Joint);
+  //ros::Subscriber sub_a1_joint_states = nh.subscribe("/a1/joint_states", 1, recvA1LinkStates);
+  ros::Subscriber sub_a2_joint_states = nh.subscribe("/a1/joint_states", 1, recvA1LinkStates);
+
+  ros::Subscriber sub_gazebo_spy = nh.subscribe("/gazebo/model_states", 1, recvModelStates);
+  //ros::Subscriber sub_gazebo_spy2 = nh.subscribe("/gazebo/model_state", 1, recvModelState);
 
 
   ros::spin();
