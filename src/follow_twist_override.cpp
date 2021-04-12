@@ -2,49 +2,77 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float64.h>
-#include <sensor_msgs/JointState.h>
-#include <gazebo_msgs/LinkStates.h>
-#include <gazebo_msgs/LinkState.h>
-#include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 #include <std_msgs/Float64.h>
 #include <gazebo_msgs/ModelStates.h>
-#include <gazebo_msgs/ModelState.h>
-
 
 //GLOBAL VARIABLES
+//For publishing the desired command velocity
 ros::Publisher pub_vel;
+//global varriable for keeping track of vehicle's distance from one another
 double a1_a2_separation;
+//Target distance which the cars should be separated by
+double sep_target = 25.0;
+//Previous following vehicle velocity
+double prev_vel;
+//vehicle "acceleration"/P gain
+double acc_gain = 1.0;
+
+//finds pythagorean distance between two xy points
+double cartDistance(double x1, double x2, double y1, double y2)
+{
+  double xDiff = pow(x1-x2,2);
+  double yDiff = pow(y1-y2, 2);
+
+  return sqrt(xDiff+yDiff);
+}
 
 //Every time steering command is recieved, also transmit a velocity command
 void recvThr(const geometry_msgs::Twist& msg){
-  //ROS_INFO("rcvThr:     Angular R: %f   P: %f   Y: %f   ", msg.angular.x, msg.angular.y, msg.angular.z);
-  //ROS_INFO("rcvThr:     Linear  X: %f   Y: %f   Z: %f   ", msg.linear.x, msg.linear.y, msg.linear.z);
 
   geometry_msgs::Twist vel;
 
-  vel.linear.x = 10.0;
+  double new_vel = prev_vel + acc_gain * (a1_a2_separation - sep_target );
+
+  if(new_vel > 30.0)
+  {
+    new_vel = 30.0;
+  }
+
+  if(new_vel < 10.0)
+  {
+    new_vel = 10.0;
+  }
+
+  prev_vel = new_vel;
+
+  vel.linear.x = new_vel;
   vel.angular.z = msg.angular.z;
 
   pub_vel.publish(vel);
-  //ROS_INFO("Published Velocity: %f", vel.linear.x);
+  ROS_INFO("Published Velocity: %f", vel.linear.x);
+  ROS_INFO("Distance between cars: %f", a1_a2_separation);
+
 }
 
+//Reads Gazebo topics which advertise model's positions
 //http://docs.ros.org/en/jade/api/gazebo_msgs/html/msg/ModelStates.html
 void recvModelStates(const gazebo_msgs::ModelStates& msg){
+  int arraySize = msg.name.size();    //vehicle models are at end
+  //last is lead car?
+  //second last is follow car?
+  double a1x = msg.pose[arraySize-2].position.x;
+  double a1y = msg.pose[arraySize-2].position.y;
+  double a1z = msg.pose[arraySize-2].position.z;
 
-  ROS_INFO("number of names: %d", msg.name.size());
+  double a2x = msg.pose[arraySize-1].position.x;
+  double a2y = msg.pose[arraySize-1].position.y;
+  double a2z = msg.pose[arraySize-1].position.z;
 
-  ROS_INFO("Object %d X: %f", msg.pose[msg.name.size()-1].position.x);
-  ROS_INFO("Object %d Y: %f", msg.pose[msg.name.size()-1].position.y);
-  ROS_INFO("Object %d Z: %f", msg.pose[msg.name.size()-1].position.z);
+  a1_a2_separation = cartDistance(a1x, a2x, a1y, a2y);
 
-  ROS_INFO("Object %d X: %f", msg.pose[msg.name.size()-2].position.x);
-  ROS_INFO("Object %d Y: %f", msg.pose[msg.name.size()-2].position.y);
-  ROS_INFO("Object %d Z: %f", msg.pose[msg.name.size()-2].position.z);
-
+  //ROS_INFO("Distance between cars: %f", a1_a2_separation);
 }
-
 
 //main function
 int main(int argc, char** argv){
@@ -54,18 +82,10 @@ int main(int argc, char** argv){
 
   ROS_INFO("INTO MAIN");
 
-  //ros::Timer timer = nh.createTimer(ros::Duration(1.0), speedTimerCallback);
-
-  pub_vel = nh.advertise<geometry_msgs::Twist>("/a1/cmd_vel", 1); //x velocity with float64
-  //ros::Subscriber sub_twist = nh.subscribe("/a1/twist", 1, recvTwist);
   ros::Subscriber sub_cmd_vel = nh.subscribe("/a1/cmd_vel", 1, recvThr);
 
-  //ros::Subscriber sub_a1_joint_states = nh.subscribe("/a1/joint_states", 1, recvA1LinkStates);
-  ros::Subscriber sub_a2_joint_states = nh.subscribe("/a1/joint_states", 1, recvA1LinkStates);
-
+  pub_vel = nh.advertise<geometry_msgs::Twist>("/a1/cmd_vel", 1); //x velocity with float64
   ros::Subscriber sub_gazebo_spy = nh.subscribe("/gazebo/model_states", 1, recvModelStates);
-  //ros::Subscriber sub_gazebo_spy2 = nh.subscribe("/gazebo/model_state", 1, recvModelState);
-
 
   ros::spin();
 }
