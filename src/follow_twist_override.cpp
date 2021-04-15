@@ -16,6 +16,8 @@ double a1_a2_separation = 0;
 double sep_target = 18;
 //current turn command phi
 double cmd_turn; 
+//Previous following vehicle velocity
+double prev_vel;
 //vehicle max & min velocities
 double max_vel = 25.0;  //gets updated referencing lead car
 double min_vel = 15.0;   //gets updated referencing lead car
@@ -23,13 +25,13 @@ double catchup_vel_offset = 5.0;
 double lead_vel; //retrieved from lead car speed parameter
 
 //max considered separation INVERTED
-//double min_pid_src = 5;  //smaller than 5 and the vehicles collide
-//double max_pid_src = sep_target + 100;
+double min_pid_src = -20;  //smaller than 5 and the vehicles collide
+double max_pid_src = 20;
 
 //PID constants
-double P = 15;
+double P = 8.5;
 double I = 0;
-double D = 7;
+double D = 0;
 double pid_source = 0.0;  //a1_a2_separation - sep_target;
 double pid_target = 0.0;
 //PID controller object
