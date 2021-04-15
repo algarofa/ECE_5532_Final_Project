@@ -11,25 +11,26 @@
 //For publishing the desired command velocity
 ros::Publisher pub_vel;
 //global varriable for keeping track of vehicle's distance from one another
-double a1_a2_separation;
+double a1_a2_separation = 0;
 //Target distance which the cars should be separated by
-double sep_target = 20.0;
-//Previous following vehicle velocity
-double prev_vel;
+double sep_target = 18;
 //current turn command phi
 double cmd_turn; 
 //vehicle max & min velocities
-double max_vel = 0.0;
-double min_vel = -40.0;
+double max_vel = 25.0;  //gets updated referencing lead car
+double min_vel = 15.0;   //gets updated referencing lead car
+double catchup_vel_offset = 5.0;
+double lead_vel; //retrieved from lead car speed parameter
+
 //max considered separation INVERTED
-//double min_dist = 5;  //smaller than 5 and the vehicles collide
-//double max_dist = sep_target + 100;
+//double min_pid_src = 5;  //smaller than 5 and the vehicles collide
+//double max_pid_src = sep_target + 100;
 
 //PID constants
-const double P = 1.5;
-const double I = 0.0;
-const double D = 0.0;
-double pid_source = sep_target - a1_a2_separation;
+double P = 15;
+double I = 0;
+double D = 7;
+double pid_source = 0.0;  //a1_a2_separation - sep_target;
 double pid_target = 0.0;
 //PID controller object
 
@@ -45,35 +46,39 @@ void cmdVel(double v)
   ROS_INFO("Distance between cars: %f", a1_a2_separation);
 }
 
+void recvLeadVel(const geometry_msgs::Twist& msg){
+  geometry_msgs::Twist follow_vel;
+  max_vel = follow_vel.linear.x + catchup_vel_offset;
+  min_vel = follow_vel.linear.x - catchup_vel_offset;
+  ROS_INFO("read lead vel");
+}
+
 //PID input
 double pidDoubleSource()
 {
+  ROS_INFO("PID double source: %f", pid_source);
   return pid_source;
 }
 //PID output
 void pidDoubleOutput(double output)
 {
-  cmdVel(-output);
+  cmdVel(output);
 }
 
 unsigned long timeFunction()
 {
   // Multiply by 1000 to convert seconds to milliseconds
-  return (unsigned long) ros::Time::now().toSec() * 1000;
+  return (unsigned long) ros::Time::now().toSec();
 }
 
 //initializes PID components
 void initPID(PIDController<double>& myDoublePIDControllerPtr){
-  // P, I, and D represent constants in the user's program.
-  //PIDController<double> myDoublePIDController(P, I, D, pidDoubleSource, pidDoubleOutput);
-  //to keep track of time
-  myDoublePIDControllerPtr.registerTimeFunction(timeFunction);
-
+  //myDoublePIDControllerPtr.registerTimeFunction(timeFunction);
   myDoublePIDControllerPtr.setTarget(pid_target);
   myDoublePIDControllerPtr.setOutputBounded(true);
   myDoublePIDControllerPtr.setOutputBounds(min_vel, max_vel);
-  myDoublePIDControllerPtr.setInputBounded(true);
-  //myDoublePIDControllerPtr.setInputBounds(min_dist, max_dist);
+  //myDoublePIDControllerPtr.setInputBounded(true);
+  //myDoublePIDControllerPtr.setInputBounds(min_pid_src, max_pid_src);
   myDoublePIDControllerPtr.setEnabled(true);
 }
 
@@ -107,7 +112,9 @@ void recvModelStates(const gazebo_msgs::ModelStates& msg){
 
   a1_a2_separation = cartDistance(a1x, a2x, a1y, a2y);
 
-  //ROS_INFO("Distance between cars: %f", a1_a2_separation);
+  pid_source = sep_target - a1_a2_separation;
+
+  //ROS_INFO("recvModelStates: %f", a1_a2_separation);
 }
 
 //init PID controller
@@ -120,7 +127,6 @@ void PIDTimerCallback(const ros::TimerEvent& event){
   ROS_INFO("PID error: %f", vel_PID_controller.getError());
   ROS_INFO("PID output: %f", vel_PID_controller.getOutput());
   ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback());
-
 }
 
 //main function
@@ -132,9 +138,10 @@ int main(int argc, char** argv){
   PIDController<double> *ip = &vel_PID_controller;
   initPID(*ip);
 
-  ROS_INFO("INTO MAIN");
+  nh.getParam("/a2/speed",lead_vel);
 
   ros::Subscriber sub_cmd_vel = nh.subscribe("/a1/cmd_vel", 1, recvThr);
+  ros::Subscriber sub_lead_vel = nh.subscribe("a2/twist", 1, recvLeadVel);
 
   ros::Timer PID_timer = nh.createTimer(ros::Duration(0.01), PIDTimerCallback);
 
