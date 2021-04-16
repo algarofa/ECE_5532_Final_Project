@@ -14,8 +14,12 @@ geometry_msgs
 catkin_package()
 
 include_directories(
+  ./PID/cpp/
   ${catkin_INCLUDE_DIRS}
 )
 
+add_library(PID PID/cpp/PID.cpp)
+target_link_libraries(PID ${catkin_LIBRARIES})
+
 add_executable(follow_twist_override src/follow_twist_override.cpp)
-target_link_libraries(follow_twist_override ${catkin_LIBRARIES})
+target_link_libraries(follow_twist_override ${catkin_LIBRARIES} PID)
