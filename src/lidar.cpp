@@ -1,7 +1,11 @@
 //http://wiki.ros.org/navigation/Tutorials/RobotSetup/Sensors
-//Cartesian coordiantes are generated from the LIDAR array using angle and range and angle info 
+//cartesian coordiantes are generated from the LIDAR array using angle and range and angle info 
 //rosmsg show LaserScan
-//currentangle = range index * angle_min
+//angle_current = range[i] * angle_min
+//need to add costmap, global and local
+//global tied to particular TF frame, local tied to base TF frame
+//global is static, local is dynamic
+//set parameters for costmaps in YAML
 
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h> //message is used to transmit LIDAR data from a driver node to any other node
