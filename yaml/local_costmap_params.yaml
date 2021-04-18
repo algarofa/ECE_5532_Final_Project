@@ -1,0 +1,31 @@
+global_frame: map #0,0 position of the map
+robot_base_frame: a1/base_footprint #typically named base_footprint
+robot_radius: 0.5 # m, radius of the robot
+transform_tolerance: 0.2 # secs, wait for transform (how old the information can be, higher tol. means more error)
+update_frequency: 5.0 # Hz, how often the lidar data is used to update the map
+publish_frequency: 2.0 # Hz, how fast the costmap is published to the planner, rviz, or other nodes
+rolling_window: true # false = global, true = local
+
+width: 20 # m
+height: 20 # m
+resolution: 0.05 # m
+
+plugins:
+  - {name: obstacles, type: "costmap_2d::ObstacleLayer"}
+  - {name: inflation, type: "costmap_2d::InflationLayer"}
+
+obstacles:
+  obstacle_range: 2.5
+  raytrace_range: 3.0
+
+  observation_sources: lidar_scan
+  lidar_scan:
+    topic: /a1/laser_front/scan
+    sensor_frame: a1/laser_front
+    data_type: LaserScan
+    marking: true
+    clearing: true
+
+inflation:
+  inflation_radius: 1.1
+  cost_scaling_factor: 0.2

@@ -1,17 +1,38 @@
 //http://wiki.ros.org/navigation/Tutorials/RobotSetup/Sensors
-//Cartesian coordiantes are generated from the LIDAR array using angle and range and angle info 
+//https://docs.ros.org/en/diamondback/api/sensor_msgs/html/LaserScan_8h_source.html
+//cartesian coordiantes are generated from the LIDAR array using angle and range and angle info 
 //rosmsg show LaserScan
-//currentangle = range index * angle_min
+//angle_current = range[i] * angle_min
+//need to add costmap, global and local
+//global tied to particular TF frame, local tied to base TF frame
+//global is static, local is dynamic
+//set parameters for costmaps in YAML
+//move_base_simple/goal (geometry_msgs/PoseStamped), subscribe to
+//cmd_vel, publish to
 
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h> //message is used to transmit LIDAR data from a driver node to any other node
+#include <geometry_msgs/Twist.h>
+#include <std_msgs/Float64.h>
+
+void LaserScan(const sensor_msgs::LaserScanConstPtr& msg){
+
+}
+
+void Velocity_Callback(const geometry_msgs::TwistConstPtr& msg){
+
+}
 
 int main(int argc, char** argv){
   ros::init(argc, argv, "laser_scan");
   ros::NodeHandle nh;
-  ros::Publisher scan_pub = nh.advertise<sensor_msgs::LaserScan>("scan", 50);
+  ros::Publisher pub_lidar = nh.advertise<sensor_msgs::LaserScan>("LaserScan", 50);
+  ros::Publisher pub_velocity = nh.advertise<geometry_msgs::Twist>("/a1/cmd_vel", 1);
+  //ros::Subscriber sub_lidar = nh.subscribe("/a1/laser_scan", 1, LaserScan_Callback);
+  ros::Subscriber sub_velocity = nh.subscribe("/a1/cmd_vel", 1, Velocity_Callback);
 
-  unsigned int num_readings = 100;
+  //These lines are already included in LaserScan message, to see more rosmsg show LaserScan
+  /*unsigned int num_readings = 100;
   double laser_frequency = 40;
   double ranges[num_readings];
   double intensities[num_readings];
@@ -47,7 +68,7 @@ int main(int argc, char** argv){
        scan_pub.publish(scan);
        ++count;
        r.sleep();
-     }
+     }*/
 
   ros::spin();
 }

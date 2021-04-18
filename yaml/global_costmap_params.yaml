@@ -1,0 +1,34 @@
+global_frame: map #0,0 position of the map
+robot_base_frame: a1/base_footprint #typically named base_footprint
+robot_radius: 0.5 # m, radius of the robot
+transform_tolerance: 0.2 # secs, wait for transform (how old the information can be, higher tol. means more error)
+update_frequency: 5.0 # Hz, how often the lidar data is used to update the map (higher freq. more comp. expensive, polar to x,y to global x,y to costmap values)
+publish_frequency: 2.0 # Hz, how fast the costmap is published to the planner, rviz, or other nodes
+rolling_window: false # false = global, true = local
+
+width: 100 # m
+height: 100 # m
+resolution: 0.05 # m
+origin_x: -50 # m, default is zero which causes the "negative" direction to be off map (offset by half the size of the map)
+origin_y: -50 # m, default is zero which causes the "negative" direction to be off map (offset by half the size of the map)
+
+#must be in order of map, obstacle, inflation
+plugins:
+  - {name: obstacles, type: "costmap_2d::ObstacleLayer"}
+  - {name: inflation, type: "costmap_2d::InflationLayer"}
+
+obstacles:
+  obstacle_range: 2.5 #only lidar data within a certain range can be added to the costmap
+  raytrace_range: 3.0 #the distance needed to clear the costmap
+
+  observation_sources: lidar_scan
+  lidar_scan:
+    topic: /a1/laser_front/scan
+    sensor_frame: a1/laser_front
+    data_type: LaserScan #message type
+    marking: true  #if the sensor is used for marking
+    clearing: true #if the sensor is used for clearing
+
+inflation:
+  inflation_radius: 1.1
+  cost_scaling_factor: 0.2
