@@ -4,11 +4,11 @@
   <include file="$(find ugv_course_launch)/launch/a1_nav_sim_gazebo.launch" />
 
   <node pkg="move_base" type="move_base" name="move_base">
-    <rosparam ns="global_costmap" file="$(find ECE_5532_Final_Project)/yaml/global_costmap_params.yaml"/>
-    <rosparam ns="local_costmap" file="$(find ECE_5532_Final_Project)/yaml/local_costmap_params.yaml"/>
-    <rosparam ns="NavfnROS" file="$(find ECE_5532_Final_Project)/yaml/global_planner_params.yaml"/>
-    <rosparam ns="TrajectoryPlannerROS" file="$(find ECE_5532_Final_Project)/yaml/local_planner_params.yaml"/> 
-    <rosparam file="$(find ECE_5532_Final_Project)/yaml/move_base_params.yaml"/> 
+    <rosparam ns="global_costmap" file="$(find ece_5532_final)/yaml/global_costmap_params.yaml"/>
+    <rosparam ns="local_costmap" file="$(find ece_5532_final)/yaml/local_costmap_params.yaml"/>
+    <rosparam ns="NavfnROS" file="$(find ece_5532_final)/yaml/global_planner_params.yaml"/>
+    <rosparam ns="TrajectoryPlannerROS" file="$(find ece_5532_final)/yaml/local_planner_params.yaml"/> 
+    <rosparam file="$(find ece_5532_final)/yaml/move_base_params.yaml"/> 
     <remap from="cmd_vel" to="/a1/cmd_vel" />
  </node>
 
