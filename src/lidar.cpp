@@ -6,6 +6,8 @@
 //global tied to particular TF frame, local tied to base TF frame
 //global is static, local is dynamic
 //set parameters for costmaps in YAML
+//move_base_simple/goal (geometry_msgs/PoseStamped), subscribe to
+//cmd_vel, publish to
 
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h> //message is used to transmit LIDAR data from a driver node to any other node

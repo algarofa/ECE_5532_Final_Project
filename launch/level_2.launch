@@ -13,5 +13,5 @@
  </node>
 
   <node pkg="tf" type="static_transform_publisher" name="world_to_map" args="0 0 0 0 0 0 world map 30" />
-  <node ns="a1" pkg="a1_twist_controller" type="a1_twist_control" name="a1_twist_control" />
+  <node ns="a1" pkg="a1_twist_controller" type="a1_twist_control" name="a1_twist_control" /> 
 </launch>

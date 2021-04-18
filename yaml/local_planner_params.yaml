@@ -2,6 +2,7 @@
 
 sim_time: 1.0 #trajectory travel time, how far ahead
 vx_samples: 3 #number of speed samples to consider
+#vy_samples: 3 #only for meccanum drive robots
 vtheta_samples: 10 #number of yaw rater to consider
 controller_frequency: 20.0 #how times per sec to compute twist command
 min_vel_x: 0.1 #min speed to consider
@@ -11,10 +12,9 @@ max_vel_theta: 1.0 #max yaw angle
 acc_lim_x: 2.5 #regulates speed accel. 
 acc_lim_theta: 3.2 #regulates yaw rate accel. 
 
-
 gdist_scale: 0.8 #discourages going far from the angle of trajectory of the desired position (can keep robot from turning away from goal)
 pdist_scale: 0.8 #discourages going faraway from the trajectory of the global planner
 occdist_scale: 0.01 #penalizes the robot from entering padding zones and lethal spaces
 
 global_frame_id: map
-holonomic_robot: false
+holonomic_robot: false #meccanum drive robot will require this set to true, diff drive robot will require false
