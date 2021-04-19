@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <include file="$(find ece_5532_final)/launch/spawn_audibot.launch" >
+    <arg name="robot_name" value="a1" />
+    <arg name="start_x" value="-152.5" />
+    <arg name="start_y" value="275.2" />
+    <arg name="start_z" value="0.3" />
+    <arg name="start_yaw" value="-1.5707" />
+    <arg name="gps" value="true" />
+    <arg name="gps_rate" value="50.0" />
+    <arg name="camera" value="true" />
+    <arg name="lidar" value="true" />
+    <arg name="pub_tf" value="true" />
+    <arg name="tf_freq" value="100.0" />
+    <arg name="color" value="orange" />
+  </include>
+
+  <include file="$(find ece_5532_final)/launch/spawn_audibot.launch" >
+    <arg name="robot_name" value="a2" />
+    <arg name="start_x" value="-152.5" />
+    <arg name="start_y" value="235.2" />
+    <arg name="start_z" value="0.3" />
+    <arg name="start_yaw" value="-1.5707" />
+    <arg name="gps" value="true" />
+    <arg name="gps_rate" value="50.0" />
+    <arg name="camera" value="true" />
+    <arg name="lidar" value="true" />
+    <arg name="pub_tf" value="true" />
+    <arg name="tf_freq" value="100.0" />
+    <arg name="color" value="blue" />
+  </include>
+
+  <param name="/a1/gps/ref_lat" value="42.853452" />
+  <param name="/a1/gps/ref_lon" value="-83.069858" />
+
+  <param name="/a2/gps/ref_lat" value="42.853452" />
+  <param name="/a2/gps/ref_lon" value="-83.069858" />
+
+  <param name="/use_sim_time" value="true" />
+  <node pkg="ugv_course_gazebo" type="robust_gazebo_launch.py" name="gazebo_launch" output="screen" >
+    <param name="launch_cmd" value="$(find ugv_course_gazebo)/launch/gazebo_world.launch world_name:=$(find ugv_course_gazebo)/worlds/road_world.world use_camera_control:=true camera_target_model:=a1" />
+  </node>
+
+</launch>

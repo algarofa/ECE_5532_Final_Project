@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="robot_name" default="audibot" />
+  <arg name="start_x" default="0.0" />
+  <arg name="start_y" default="0.0" />
+  <arg name="start_z" default="0.0" />
+  <arg name="start_yaw" default="0.0" />
+  <arg name="gps" default="false" />
+  <arg name="gps_rate" default="1.0" />
+  <arg name="ref_lat" default="42.0" />
+  <arg name="ref_lon" default="-83.0" />
+  <arg name="camera" default="false" />
+  <arg name="lidar" default="false" />
+  <arg name="pub_tf" default="false" />
+  <arg name="tf_freq" default="50.0" />
+  <arg name="color" default="orange" />
+
+  <arg name="urdf_file" if="$(eval camera and gps and lidar)" value="audibot_gps_and_camera_and_lidar" />
+  <arg name="urdf_file" if="$(eval camera and gps and not lidar)" value="audibot_gps_and_camera" />
+  <arg name="urdf_file" if="$(eval camera and not gps and not lidar)" value="audibot_camera" />
+  <arg name="urdf_file" if="$(eval gps and not camera and not lidar)" value="audibot_gps" />
+  <arg name="urdf_file" if="$(eval not gps and not camera and not lidar)" value="audibot" />
+
+  <arg name="urdf_gps_args" if=    "$(arg gps)" value="gps_rate:=$(arg gps_rate) ref_lat:=$(arg ref_lat) ref_lon:=$(arg ref_lon)" />
+  <arg name="urdf_gps_args" unless="$(arg gps)" value="" />
+
+  <arg name="blue_arg" if=    "$(eval color=='blue')" value="blue:=true" />
+  <arg name="blue_arg" unless="$(eval color=='blue')" value="blue:=false" />
+
+  <group ns="$(arg robot_name)" >
+    <param name="robot_description" command="$(find xacro)/xacro '$(find ece_5532_final)/urdf/$(arg urdf_file).urdf.xacro' pub_tf:=$(arg pub_tf) robot_name:=$(arg robot_name) $(arg urdf_gps_args) $(arg blue_arg)" />
+    <node pkg="gazebo_ros" type="spawn_model"  name="spawn_$(arg robot_name)" args="-urdf -param robot_description -model $(arg robot_name) -x $(arg start_x) -y $(arg start_y) -z $(arg start_z) -Y $(arg start_yaw)"/>
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="state_publisher">
+      <param name="publish_frequency" type="double" value="$(arg tf_freq)" />
+      <param name="tf_prefix" value="$(arg robot_name)" />
+    </node>
+  </group>
+
+</launch>
