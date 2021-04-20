@@ -15,21 +15,27 @@
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float64.h>
 
-void LaserScan(const sensor_msgs::LaserScanConstPtr& msg){
+void recieveLaserScan(const sensor_msgs::LaserScanConstPtr& msg){
 
 }
 
-void Velocity_Callback(const geometry_msgs::TwistConstPtr& msg){
+void recieveVel(const geometry_msgs::TwistConstPtr& msg){
+  /*double v = msg->linear.x;
+  double psi_dot = msg->angular.z;
 
+  geometry_msgs::Twist wheel_spds;
+  wheel_spds.linear.x = veh_spd;
+  wheel_spds.angular.z = heading_err * gain;
+  pub_wheel_speeds.publish(wheel_spds);*/
 }
 
 int main(int argc, char** argv){
-  ros::init(argc, argv, "laser_scan");
+  ros::init(argc, argv, "lidar_nav");
   ros::NodeHandle nh;
   ros::Publisher pub_lidar = nh.advertise<sensor_msgs::LaserScan>("LaserScan", 50);
   ros::Publisher pub_velocity = nh.advertise<geometry_msgs::Twist>("/a1/cmd_vel", 1);
-  //ros::Subscriber sub_lidar = nh.subscribe("/a1/laser_scan", 1, LaserScan_Callback);
-  ros::Subscriber sub_velocity = nh.subscribe("/a1/cmd_vel", 1, Velocity_Callback);
+  ros::Subscriber sub_lidar = nh.subscribe("/a1/laser_scan", 1, recieveLaserScan);
+  ros::Subscriber sub_velocity = nh.subscribe("/a1/cmd_vel", 1, recieveVel);
 
   //These lines are already included in LaserScan message, to see more rosmsg show LaserScan
   /*unsigned int num_readings = 100;

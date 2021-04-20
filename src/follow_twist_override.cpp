@@ -3,7 +3,6 @@
 #include <geometry_msgs/Twist.h>
 #include <std_msgs/Float64.h>
 #include <geometry_msgs/Pose.h>
-#include <std_msgs/Float64.h>
 #include <gazebo_msgs/ModelStates.h>
 #include "../PID/cpp/PID.h"
 
