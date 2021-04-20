@@ -17,7 +17,7 @@
     <arg name="color" value="orange" />
   </include>
 
-  <include file="$(find ece_5532_final)/launch/spawn_audibot.launch" >
+  <include file="$(find ugv_course_launch)/launch/spawn_audibot.launch" >
     <arg name="robot_name" value="a2" />
     <arg name="start_x" value="-152.5" />
     <arg name="start_y" value="235.2" />
@@ -26,7 +26,6 @@
     <arg name="gps" value="true" />
     <arg name="gps_rate" value="50.0" />
     <arg name="camera" value="true" />
-    <arg name="lidar" value="true" />
     <arg name="pub_tf" value="true" />
     <arg name="tf_freq" value="100.0" />
     <arg name="color" value="blue" />
