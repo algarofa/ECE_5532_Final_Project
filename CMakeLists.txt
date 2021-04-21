@@ -23,3 +23,6 @@ target_link_libraries(PID ${catkin_LIBRARIES})
 
 add_executable(follow_twist_override src/follow_twist_override.cpp)
 target_link_libraries(follow_twist_override ${catkin_LIBRARIES} PID)
+
+add_executable(lidar_nav src/lidar_nav.cpp)
+target_link_libraries(lidar_nav ${catkin_LIBRARIES} PID)

@@ -104,7 +104,7 @@ void PIDTimerCallback(const ros::TimerEvent& event){
   ROS_INFO("PID Target: %f", vel_PID_controller.getTarget());
   ROS_INFO("PID error: %f", vel_PID_controller.getError());
   ROS_INFO("PID output: %f", vel_PID_controller.getOutput());
-  ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback()); */
+  ROS_INFO("PID feedback: %f", vel_PID_controllegetFeedbackr.()); */
 }
 
 //main function

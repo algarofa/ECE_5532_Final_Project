@@ -3,6 +3,6 @@
 
   <xacro:include filename="$(find ugv_course_sensor_description)/urdf/hokuyo_utm_30.urdf.xacro"/>
 
-  <xacro:hokuyo_utm_30 name="laser_front" parent_frame="base_footprint" x="4.0" y="0.0" z="0.0" roll="0.0" pitch="0.0" yaw="0.0" />
+  <xacro:hokuyo_utm_30 name="laser_front" parent_frame="base_footprint" x="3.5" y="0.0" z="0.75" roll="0.0" pitch="0.0" yaw="0.0" />
 
 </robot>

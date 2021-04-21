@@ -3,78 +3,133 @@
 //cartesian coordiantes are generated from the LIDAR array using angle and range and angle info 
 //rosmsg show LaserScan
 //angle_current = range[i] * angle_min
-//need to add costmap, global and local
 //global tied to particular TF frame, local tied to base TF frame
 //global is static, local is dynamic
 //set parameters for costmaps in YAML
 //move_base_simple/goal (geometry_msgs/PoseStamped), subscribe to
 //cmd_vel, publish to
 
+//included packages
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h> //message is used to transmit LIDAR data from a driver node to any other node
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/Float32.h>
 #include <std_msgs/Float64.h>
+#include "../PID/cpp/PID.h"
 
-void recieveLaserScan(const sensor_msgs::LaserScanConstPtr& msg){
+//GLOBAL VARIABLES
+//For publishing the desired command velocity
+ros::Publisher pub_vel;
+//global varriable for keeping track of vehicle's distance from one another
+double a1_a2_separation = 0;
+//Target distance which the cars should be separated by
+double sep_target = 18;
+//current turn command phi
+double cmd_turn; 
+//vehicle max & min velocities
+double max_vel = 25.0;  //gets updated referencing lead car
+double min_vel = 15.0;   //gets updated referencing lead car
+//PID reads this as input
+double pid_source = 0.0;  //a1_a2_separation - sep_target;
+//PID tries to get output to target
+double pid_target = 0.0;
+//PID constants
+double P = 8.5;
+double I = 0;
+double D = 0;
 
+//publishes velocity and steering command messages
+void cmdVel(double v)
+{
+  geometry_msgs::Twist vel;
+
+  vel.linear.x = v;
+  vel.angular.z = cmd_turn;
+
+  pub_vel.publish(vel);
+  //ROS_INFO("Published Velocity: %f", vel.linear.x);
+  //ROS_INFO("Distance between cars: %f", a1_a2_separation);
 }
 
-void recieveVel(const geometry_msgs::TwistConstPtr& msg){
-  /*double v = msg->linear.x;
-  double psi_dot = msg->angular.z;
+//PID input/source/feedback
+double pidDoubleSource()
+{
+  return pid_source;
+}
+//PID output
+void pidDoubleOutput(double output)
+{
+  cmdVel(output);
+}
 
-  geometry_msgs::Twist wheel_spds;
-  wheel_spds.linear.x = veh_spd;
-  wheel_spds.angular.z = heading_err * gain;
-  pub_wheel_speeds.publish(wheel_spds);*/
+//initializes PID components
+void initPID(PIDController<double>& myDoublePIDControllerPtr){
+  myDoublePIDControllerPtr.setTarget(pid_target);
+  myDoublePIDControllerPtr.setOutputBounded(true);
+  myDoublePIDControllerPtr.setOutputBounds(min_vel, max_vel);
+  myDoublePIDControllerPtr.setEnabled(true);
+}
+
+//finds pythagorean distance between two xy points
+double carDistance(double x1, double x2, double y1, double y2)
+{
+  double xDiff = pow(x1-x2,2);
+  double yDiff = pow(y1-y2, 2);
+
+  return sqrt(xDiff+yDiff);
+}
+
+//Every time steering command is recieved, also transmit a velocity command
+void recvThr(const geometry_msgs::Twist& msg){
+  cmd_turn = msg.angular.z;
+}
+
+//init PID controller
+PIDController<double> vel_PID_controller(P, I, D, pidDoubleSource, pidDoubleOutput);
+
+//refreshes PID
+void PIDTimerCallback(const ros::TimerEvent& event){
+  vel_PID_controller.tick();
+  /*ROS_INFO("PID ticked");
+  ROS_INFO("PID Target: %f", vel_PID_controller.getTarget());
+  ROS_INFO("PID error: %f", vel_PID_controller.getError());
+  ROS_INFO("PID output: %f", vel_PID_controller.getOutput());
+  ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback()); */
+}
+
+void recieveLaserScan(const sensor_msgs::LaserScanConstPtr& msg){
+//store collected messaged in array
+  float run_total = 0.0; 
+  int total_count = 0;
+  //angle_max*angle_increment = number in array
+  for (int i = 179; i < 900; i++){
+    //avgerage all the elements in the array execpt inf
+      if (msg->ranges[i] < msg->range_max){
+        run_total += msg->ranges[i];
+        total_count -=- total_count; //for the memes
+        ROS_INFO("msg range: %f", msg->ranges[i]);
+      }
+  }
+  a1_a2_separation = (double)(run_total/total_count);
+  ROS_INFO("separation: %f", a1_a2_separation);
 }
 
 int main(int argc, char** argv){
   ros::init(argc, argv, "lidar_nav");
   ros::NodeHandle nh;
-  ros::Publisher pub_lidar = nh.advertise<sensor_msgs::LaserScan>("LaserScan", 50);
-  ros::Publisher pub_velocity = nh.advertise<geometry_msgs::Twist>("/a1/cmd_vel", 1);
-  ros::Subscriber sub_lidar = nh.subscribe("/a1/laser_scan", 1, recieveLaserScan);
-  ros::Subscriber sub_velocity = nh.subscribe("/a1/cmd_vel", 1, recieveVel);
 
-  //These lines are already included in LaserScan message, to see more rosmsg show LaserScan
-  /*unsigned int num_readings = 100;
-  double laser_frequency = 40;
-  double ranges[num_readings];
-  double intensities[num_readings];
+  //initializing PID object, passes pointer
+  PIDController<double> *ip = &vel_PID_controller;
+  initPID(*ip);
 
-  int count = 0;
-  ros::Rate r(1.0);
-  while(nh.ok()){
-    //generate some fake data for our laser scan
-    for(unsigned int i = 0; i < num_readings; ++i){
-         ranges[i] = count;
-         intensities[i] = 100 + count;
-       }
-       ros::Time scan_time = ros::Time::now();
-   
-       //populate the LaserScan message, all properties required
-       sensor_msgs::LaserScan scan;
-       scan.header.stamp = scan_time;
-       scan.header.frame_id = "laser_frame";
-       scan.angle_min = -1.57;
-       scan.angle_max = 1.57;
-       scan.angle_increment = 3.14 / num_readings;
-       scan.time_increment = (1 / laser_frequency) / (num_readings);
-       scan.range_min = 0.0;
-       scan.range_max = 100.0;
-   
-       scan.ranges.resize(num_readings);
-       scan.intensities.resize(num_readings);
-       for(unsigned int i = 0; i < num_readings; ++i){
-         scan.ranges[i] = ranges[i];
-         scan.intensities[i] = intensities[i]; //shiny objects are more intense, opaque objects are less intense, property is the intensity of the reflected laser
-       }
-   
-       scan_pub.publish(scan);
-       ++count;
-       r.sleep();
-     }*/
+  //timer to refresh PID
+  ros::Timer PID_timer = nh.createTimer(ros::Duration(0.01), PIDTimerCallback);
+
+  //for publishing steering and throttle messages
+  ros::Subscriber sub_cmd_vel = nh.subscribe("/a1/cmd_vel", 1, recvThr);
+
+  ros::Publisher pub_vel = nh.advertise<geometry_msgs::Twist>("/a1/cmd_vel", 1);
+  ros::Subscriber sub_lidar = nh.subscribe("a1/laser_front/scan", 1, recieveLaserScan);
 
   ros::spin();
 }

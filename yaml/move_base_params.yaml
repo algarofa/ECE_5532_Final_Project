@@ -1,7 +1,7 @@
 base_global_planner: navfn/NavfnROS
 #base_local_planner: base_local_planner/TrajectoryPlannerROS
 base_local_planner: a1_local_planner/a1LocalPlanner
-recovery_behaviors: [] #which recovery behavior are used
+recovery_behaviors: [] #which recovery behavior is used
 controller_frequency: 20.0 #how many times per second for twist cmd
 recovery_behavior_enabled: true #will use a recovery behvior when necessary
 clearing_rotation_allowed: false #in place rotation ro clear costmap if trapped
