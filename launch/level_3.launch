@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <node pkg="opencv_example" type="rgb_hough_node" name="rgb_hough" output="screen" >
+      <remap from="image_in" to="/raw_image" />
+  </node>
+
+  <!-- Decompress image from bag file -->
+  <node pkg="image_transport" type="republish" name="republish" args="in:=/image compressed out:=/raw_image" />
+
+  <include file="$(find ece_5532_final)/launch/two_audibot_path_following.launch" />
+
+  <node pkg="ece_5532_final" type="follow_camera" name="follow_camera" output="screen"/>
+
+</launch>
