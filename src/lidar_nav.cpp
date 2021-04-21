@@ -16,6 +16,7 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/Float64.h>
 #include "../PID/cpp/PID.h"
+#include <stdlib.h>     //for using the function sleep
 
 //GLOBAL VARIABLES
 //For publishing the desired command velocity
@@ -47,7 +48,7 @@ void cmdVel(double v)
   vel.angular.z = cmd_turn;
 
   pub_vel.publish(vel);
-  //ROS_INFO("Published Velocity: %f", vel.linear.x);
+  ROS_INFO("Published Velocity: %f", vel.linear.x);
   //ROS_INFO("Distance between cars: %f", a1_a2_separation);
 }
 
@@ -70,15 +71,6 @@ void initPID(PIDController<double>& myDoublePIDControllerPtr){
   myDoublePIDControllerPtr.setEnabled(true);
 }
 
-//finds pythagorean distance between two xy points
-double carDistance(double x1, double x2, double y1, double y2)
-{
-  double xDiff = pow(x1-x2,2);
-  double yDiff = pow(y1-y2, 2);
-
-  return sqrt(xDiff+yDiff);
-}
-
 //Every time steering command is recieved, also transmit a velocity command
 void recvThr(const geometry_msgs::Twist& msg){
   cmd_turn = msg.angular.z;
@@ -95,22 +87,36 @@ void PIDTimerCallback(const ros::TimerEvent& event){
   ROS_INFO("PID error: %f", vel_PID_controller.getError());
   ROS_INFO("PID output: %f", vel_PID_controller.getOutput());
   ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback()); */
+
 }
 
-void recieveLaserScan(const sensor_msgs::LaserScanConstPtr& msg){
+void recieveLaserScan(const sensor_msgs::LaserScan::ConstPtr& msg){
 //store collected messaged in array
   float run_total = 0.0; 
   int total_count = 0;
   //angle_max*angle_increment = number in array
   for (int i = 179; i < 900; i++){
     //avgerage all the elements in the array execpt inf
-      if (msg->ranges[i] < msg->range_max){
+      if (msg->ranges[i] < msg->range_max && msg->ranges[i] > msg->range_min){
         run_total += msg->ranges[i];
-        total_count -=- total_count; //for the memes
+        total_count -=- 1; //for the memes
         ROS_INFO("msg range: %f", msg->ranges[i]);
       }
   }
-  a1_a2_separation = (double)(run_total/total_count);
+  double avg = (double)(run_total/total_count);
+
+  if(isnan(avg))
+  {
+    a1_a2_separation = 29.9;
+  }
+  else
+  {
+    a1_a2_separation = avg;
+  }
+
+  pid_source = sep_target - a1_a2_separation;
+  //thank the Ballmer Peak
+  ROS_INFO("avg: %f", avg);
   ROS_INFO("separation: %f", a1_a2_separation);
 }
 
@@ -126,9 +132,10 @@ int main(int argc, char** argv){
   ros::Timer PID_timer = nh.createTimer(ros::Duration(0.01), PIDTimerCallback);
 
   //for publishing steering and throttle messages
+  pub_vel = nh.advertise<geometry_msgs::Twist>("/a1/cmd_vel", 1);
+
   ros::Subscriber sub_cmd_vel = nh.subscribe("/a1/cmd_vel", 1, recvThr);
 
-  ros::Publisher pub_vel = nh.advertise<geometry_msgs::Twist>("/a1/cmd_vel", 1);
   ros::Subscriber sub_lidar = nh.subscribe("a1/laser_front/scan", 1, recieveLaserScan);
 
   ros::spin();
