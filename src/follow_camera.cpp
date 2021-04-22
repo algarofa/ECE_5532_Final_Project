@@ -5,6 +5,7 @@
 #include <geometry_msgs/Pose.h>
 #include <gazebo_msgs/ModelStates.h>
 #include "../PID/cpp/PID.h"
+#include <sensor_msgs/Image.h>
 
 //GLOBAL VARIABLES
 //For publishing the desired command velocity
@@ -91,7 +92,7 @@ void recvModelStates(const gazebo_msgs::ModelStates& msg){
 
   pid_source = sep_target - a1_a2_separation;
 
-  ROS_INFO("recvModelStates: %f", a1_a2_separation);
+  //ROS_INFO("recvModelStates: %f", a1_a2_separation);
 }
 
 //init PID controller
@@ -105,6 +106,12 @@ void PIDTimerCallback(const ros::TimerEvent& event){
   ROS_INFO("PID error: %f", vel_PID_controller.getError());
   ROS_INFO("PID output: %f", vel_PID_controller.getOutput());
   ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback()); */
+}
+
+void recImage(const sensor_msgs::Image& msg){
+  ROS_INFO("Height: %d", msg.height);
+  ROS_INFO("Width: %d", msg.width);
+
 }
 
 //main function
@@ -128,6 +135,9 @@ int main(int argc, char** argv){
 
   //getting vehicle positions
   ros::Subscriber sub_gazebo_spy = nh.subscribe("/gazebo/model_states", 1, recvModelStates);
+
+  ros::Subscriber pic_size = nh.subscribe("/a1/front_camera/image_raw", 1, recImage);
+
 
   ros::spin();
 }
