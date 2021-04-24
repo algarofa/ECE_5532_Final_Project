@@ -109,8 +109,8 @@ void PIDTimerCallback(const ros::TimerEvent& event){
 }
 
 void recImage(const sensor_msgs::Image& msg){
-  ROS_INFO("Height: %d", msg.height);
-  ROS_INFO("Width: %d", msg.width);
+  //ROS_INFO("Height: %d", msg.height);
+  //ROS_INFO("Width: %d", msg.width);
 
 }
 
