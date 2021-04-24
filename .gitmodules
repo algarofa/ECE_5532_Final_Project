@@ -1,2 +1,5 @@
 [submodule "PID"]
 	url = https://github.com/nicholastmosher/PID.git
+[submodule "opencv"]
+	path = opencv
+	url = https://github.com/opencv/opencv.git
