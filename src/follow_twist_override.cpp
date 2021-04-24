@@ -66,7 +66,7 @@ double cartDistance(double x1, double x2, double y1, double y2)
   double yDiff = pow(y1-y2, 2);
 
   return sqrt(xDiff+yDiff);
-}
+} //nice
 
 //Every time steering command is recieved, also transmit a velocity command
 void recvThr(const geometry_msgs::Twist& msg){
