@@ -28,6 +28,8 @@ double P = 8.5;
 double I = 0;
 double D = 0;
 
+ros::Publisher pub_thresh;
+
 //publishes velocity and steering command messages
 void cmdVel(double v)
 {
@@ -108,12 +110,6 @@ void PIDTimerCallback(const ros::TimerEvent& event){
   ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback()); */
 }
 
-void recImage(const sensor_msgs::Image& msg){
-  //ROS_INFO("Height: %d", msg.height);
-  //ROS_INFO("Width: %d", msg.width);
-
-}
-
 //main function
 int main(int argc, char** argv){
 //init section
@@ -136,8 +132,7 @@ int main(int argc, char** argv){
   //getting vehicle positions
   ros::Subscriber sub_gazebo_spy = nh.subscribe("/gazebo/model_states", 1, recvModelStates);
 
-  ros::Subscriber pic_size = nh.subscribe("/a1/front_camera/image_raw", 1, recImage);
-
+  //ros::Subscriber pic_size = nh.subscribe("/a1/front_camera/image_raw", 1, recImage);
 
   ros::spin();
 }
