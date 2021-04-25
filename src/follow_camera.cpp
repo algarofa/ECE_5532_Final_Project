@@ -25,7 +25,7 @@ ros::Publisher pub_vel;
 //global varriable for keeping track of vehicle's distance from one another
 double a1_a2_separation = 0;
 //Target distance which the cars should be separated by
-double sep_target = 18;
+double sep_target = 60;
 //current turn command phi
 double cmd_turn; 
 //vehicle max & min velocities
@@ -36,11 +36,11 @@ double pid_source = 0.0;  //a1_a2_separation - sep_target;
 //PID tries to get output to target
 double pid_target = 0.0;
 //PID constants
-double P = 8.5;
-double I = 0;
-double D = 0;
+double P = 1.0;
+double I = 0.0;
+double D = 0.0;
 //Height of vehicle in pixels
-int height_max = 0;
+int pix_height = 0;
 
 ros::Publisher pub_thresh;
 
@@ -106,7 +106,7 @@ void recvModelStates(const gazebo_msgs::ModelStates& msg){
 
   a1_a2_separation = cartDistance(a1x, a2x, a1y, a2y);
 
-  pid_source = sep_target - a1_a2_separation;
+  //pid_source = sep_target - a1_a2_separation;
 
   //ROS_INFO("recvModelStates: %f", a1_a2_separation);
 }
@@ -117,11 +117,12 @@ PIDController<double> vel_PID_controller(P, I, D, pidDoubleSource, pidDoubleOutp
 //refreshes PID
 void PIDTimerCallback(const ros::TimerEvent& event){
   vel_PID_controller.tick();
-  /*ROS_INFO("PID ticked");
+  ROS_INFO("GPS distance: %f", a1_a2_separation);
+  ROS_INFO("PID ticked");
   ROS_INFO("PID Target: %f", vel_PID_controller.getTarget());
   ROS_INFO("PID error: %f", vel_PID_controller.getError());
   ROS_INFO("PID output: %f", vel_PID_controller.getOutput());
-  ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback()); */
+  ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback());
 }
 
 void recvImage(const sensor_msgs::ImageConstPtr& msg)
@@ -177,6 +178,7 @@ void recvImage(const sensor_msgs::ImageConstPtr& msg)
   vector<Rect> boundRect( contours.size() );
   
   RNG rng(12345);
+  int max_height = 0;
 
   for( size_t i = 0; i < contours.size(); i++ )
   {
@@ -190,17 +192,20 @@ void recvImage(const sensor_msgs::ImageConstPtr& msg)
       Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
       //drawContours( drawing, contours_poly, (int)i, color );
       rectangle( drawing, boundRect[i].tl(), boundRect[i].br(), color, 2 );
-      if(boundRect[i].height>height_max)
+      if(boundRect[i].height>max_height)
       {
-        height_max = boundRect[i].height;
+        max_height = boundRect[i].height;
       }
       //circle( drawing, centers[i], (int)radius[i], color, 2 );
   }
-  ROS_INFO("Number of contours: %d", contours.size());
-  ROS_INFO("max height: %d", height_max);
+
+  pix_height = max_height;
+  
+  //ROS_INFO("Number of contours: %d", contours.size());
+  //ROS_INFO("max height: %d", pix_height);
   imshow( "Contoured Image", drawing );
 
-  
+  pid_source = pix_height - sep_target;
 
 }
 
