@@ -6,6 +6,18 @@
 #include <gazebo_msgs/ModelStates.h>
 #include "../PID/cpp/PID.h"
 #include <sensor_msgs/Image.h>
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#include <opencv2/opencv.hpp>
+#include <cv_bridge/cv_bridge.h>
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+
+//https://docs.opencv.org/3.4/da/d0c/tutorial_bounding_rects_circles.html
+
 
 //GLOBAL VARIABLES
 //For publishing the desired command velocity
@@ -27,6 +39,8 @@ double pid_target = 0.0;
 double P = 8.5;
 double I = 0;
 double D = 0;
+//Height of vehicle in pixels
+int height_max = 0;
 
 ros::Publisher pub_thresh;
 
@@ -110,6 +124,87 @@ void PIDTimerCallback(const ros::TimerEvent& event){
   ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback()); */
 }
 
+void recvImage(const sensor_msgs::ImageConstPtr& msg)
+{
+  int x_0 = 0;
+  int y_0 = 0;
+  int x_f = msg->width;
+  int y_f = msg->width - 450; //cropping of vertical
+
+  cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+  cv::Mat raw_img = cv_ptr->image;
+
+  cv::imshow("Raw Image", raw_img);
+  cv::waitKey(1);
+
+  std::vector<cv::Mat> split_images;
+  cv::split(raw_img, split_images);
+
+  cv::Mat blue_image = split_images[1];
+  //cv::Mat green_image = split_images[1];
+  //cv::Mat red_image = split_images[2];
+
+  cv::Mat croppedImage = blue_image(cv::Rect(x_0, y_0, x_f, y_f));       
+  cv::imshow("Cropped Image", croppedImage);
+
+  cv::imshow("Blue Image", blue_image);
+  cv::waitKey(1);
+
+  cv::Mat thres_img;
+  cv::threshold(croppedImage, thres_img, 2, 255, cv::THRESH_BINARY);
+
+  cv::imshow("Thres Image", thres_img);
+  cv::waitKey(1);
+
+  cv::Mat erode_img;
+  cv::erode(thres_img, erode_img, cv::Mat::ones(20, 20, CV_8U));
+
+  cv::imshow("Erode Image", erode_img);
+  cv::waitKey(1);
+
+  cv::Mat dilate_img;
+  cv::dilate(erode_img, dilate_img, cv::Mat::ones(20, 20, CV_8U));
+
+  cv::imshow("Dilate Image", dilate_img);
+  cv::waitKey(1);
+
+  cv::Mat canny_output;
+  Canny(dilate_img, canny_output, 64, 192);
+  vector<vector<Point> > contours;
+  findContours( canny_output, contours, RETR_TREE, CHAIN_APPROX_SIMPLE );
+
+  vector<vector<Point> > contours_poly( contours.size() );
+  vector<Rect> boundRect( contours.size() );
+  
+  RNG rng(12345);
+
+  for( size_t i = 0; i < contours.size(); i++ )
+  {
+      approxPolyDP( contours[i], contours_poly[i], 3, true );
+      boundRect[i] = boundingRect( contours_poly[i] );
+      //minEnclosingCircle( contours_poly[i], centers[i], radius[i] );
+  }
+  Mat drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
+  for( size_t i = 0; i< contours.size(); i++ )
+  {
+      Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+      //drawContours( drawing, contours_poly, (int)i, color );
+      rectangle( drawing, boundRect[i].tl(), boundRect[i].br(), color, 2 );
+      if(boundRect[i].height>height_max)
+      {
+        height_max = boundRect[i].height;
+      }
+      //circle( drawing, centers[i], (int)radius[i], color, 2 );
+  }
+  ROS_INFO("Number of contours: %d", contours.size());
+  ROS_INFO("max height: %d", height_max);
+  imshow( "Contoured Image", drawing );
+
+  
+
+}
+
+
 //main function
 int main(int argc, char** argv){
 //init section
@@ -132,7 +227,19 @@ int main(int argc, char** argv){
   //getting vehicle positions
   ros::Subscriber sub_gazebo_spy = nh.subscribe("/gazebo/model_states", 1, recvModelStates);
 
-  //ros::Subscriber pic_size = nh.subscribe("/a1/front_camera/image_raw", 1, recImage);
+  //create troubleshooting GUI windows
+  cv::namedWindow("Raw Image", CV_WINDOW_AUTOSIZE);
+  cv::namedWindow("Blue Image", CV_WINDOW_AUTOSIZE);
+  cv::namedWindow("Cropped Image", CV_WINDOW_AUTOSIZE);
+  //cv::namedWindow("Red Image", CV_WINDOW_AUTOSIZE);
+  //cv::namedWindow("Green Image", CV_WINDOW_AUTOSIZE);
+  cv::namedWindow("Thres Image", CV_WINDOW_AUTOSIZE);
+  cv::namedWindow("Erode Image", CV_WINDOW_AUTOSIZE);
+  cv::namedWindow("Dilate Image", CV_WINDOW_AUTOSIZE);
+  cv::namedWindow("Contoured Image", CV_WINDOW_AUTOSIZE);
+
+  ros::Subscriber sub_image = nh.subscribe("/a1/front_camera/image_raw", 1, &recvImage);
+
 
   ros::spin();
 }
