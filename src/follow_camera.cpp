@@ -53,8 +53,8 @@ void cmdVel(double v)
   vel.angular.z = cmd_turn;
 
   pub_vel.publish(vel);
-  //ROS_INFO("Published Velocity: %f", vel.linear.x);
-  //ROS_INFO("Distance between cars: %f", a1_a2_separation);
+  ROS_INFO("Published Velocity: %f", vel.linear.x);
+  ROS_INFO("Distance between cars: %f", a1_a2_separation);
 }
 
 //PID input/source/feedback
@@ -116,13 +116,13 @@ PIDController<double> vel_PID_controller(P, I, D, pidDoubleSource, pidDoubleOutp
 
 //refreshes PID
 void PIDTimerCallback(const ros::TimerEvent& event){
-  vel_PID_controller.tick();
+  vel_PID_controller.tick();/*
   ROS_INFO("GPS distance: %f", a1_a2_separation);
   ROS_INFO("PID ticked");
   ROS_INFO("PID Target: %f", vel_PID_controller.getTarget());
   ROS_INFO("PID error: %f", vel_PID_controller.getError());
   ROS_INFO("PID output: %f", vel_PID_controller.getOutput());
-  ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback());
+  ROS_INFO("PID feedback: %f", vel_PID_controller.getFeedback());*/
 }
 
 void recvImage(const sensor_msgs::ImageConstPtr& msg)
@@ -209,7 +209,6 @@ void recvImage(const sensor_msgs::ImageConstPtr& msg)
 
 }
 
-
 //main function
 int main(int argc, char** argv){
 //init section
@@ -244,7 +243,6 @@ int main(int argc, char** argv){
   cv::namedWindow("Contoured Image", CV_WINDOW_AUTOSIZE);
 
   ros::Subscriber sub_image = nh.subscribe("/a1/front_camera/image_raw", 1, &recvImage);
-
 
   ros::spin();
 }
